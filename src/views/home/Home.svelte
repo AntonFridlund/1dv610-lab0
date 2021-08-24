@@ -1,13 +1,10 @@
 <script>
 	import { load } from 'opentype.js'
-	import { draw } from 'svelte/transition'
 	import { fly } from 'svelte/transition'
-	import { fade } from 'svelte/transition'
 	import { onMount } from 'svelte'
+	import anime from 'animejs'
 
 	let gloabalLoad = false
-	
-	onMount(() => gloabalLoad = true)
 
 	let textSvg = {
 		load: false,
@@ -15,6 +12,10 @@
 		path: null,
 		fill: false
 	}
+
+	onMount(async () => {
+		gloabalLoad = true
+	});
 
 	// Generates SVG from user input.
 	async function make(value) {
@@ -30,6 +31,25 @@
 		textSvg.path = path.toPathData()
 		textSvg.load = true
 	}
+
+	// Draw line animation.
+	async function drawLine(e, { duration = 1500, delay = 0 }) {
+		// Fix for Firefox.
+		let maximumWait = 100
+		while(e.getTotalLength() === 3.99999987306209e-20 && maximumWait > 0) {
+			await new Promise(resolve => setTimeout(resolve, 1))
+			maximumWait--
+		}
+		anime({
+			targets: e,
+			strokeDashoffset: [anime.setDashoffset, 0],
+			easing: 'easeInOutSine',
+			duration: duration,
+			delay: delay,
+			direction: 'normal',
+			loop: false
+		})
+	}
 </script>
 
 <svelte:head> <!-- Page title -->
@@ -38,11 +58,10 @@
 
 {#if gloabalLoad && !textSvg.load} <!-- User input form -->
 	<form id="name-form" autocomplete="off"
-		in:fade="{{ duration: 750 }}"
 		out:fly="{{ duration: 750, y: -300 }}"
 		on:submit|preventDefault="{make}">
 		<svg>
-			<rect in:draw="{{ duration: 1000 }}"/>
+			<rect in:drawLine="{{ duration: 1000 }}"/>
 		</svg>
 		<label for="name-input"><p>Name:</p></label>
 		<div id="input-holder">
@@ -55,14 +74,14 @@
 {#if textSvg.load} <!-- Generated text SVG -->
 	<div id="svg-holder" in:fly="{{ duration: 750, y: 300 }}">
 		<svg viewbox="{textSvg.viewBox}">
-			<path d="{textSvg.path}" on:introstart="{setTimeout(()=>textSvg.fill=true,1150)}" in:draw="{{ duration: 3500 }}" class:fill-svg="{textSvg.fill}" />
+			<path d="{textSvg.path}" on:introstart="{setTimeout(()=>textSvg.fill=true,750)}" in:drawLine="{{ duration: 3500 }}" class:fill-svg="{textSvg.fill}" />
 		</svg>
 	</div>
 {/if}
 
 <style> /** CSS styles **/
 	#name-form {
-		padding: 15px;
+		padding: 15.5px;
 		display: table;
 		position: absolute;
 		top: 50%;
@@ -81,7 +100,7 @@
 
 	#name-form svg rect {
 		fill: none;
-    stroke-width: 3.5px;
+    stroke-width: 3px;
     stroke: #000;
     width: inherit;
     height: inherit;
@@ -100,7 +119,7 @@
 	}
 
 	#name-input {
-		border: 1.5px dashed #000;
+		border: 1px dashed #000;
     border-radius: 0;
     outline: none;
     display: inline;
@@ -108,9 +127,9 @@
 	}
 
 	#name-form button {
-		border: 1.5px dashed #000;
+		border: 1px dashed #000;
     position: relative;
-    left: -1.5px;
+    left: -1px;
     background: #fff;
 		cursor: pointer;
 	}
