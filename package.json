@@ -4,7 +4,6 @@
   "description": "Svelte greetings page.",
   "main": "src/main.go",
   "scripts": {
-    "start": "cd src/ && go run main.go",
     "build": "rollup -c"
   },
   "contributors": [
